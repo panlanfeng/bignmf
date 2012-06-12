@@ -1,0 +1,11 @@
+Package: bignmf
+Type: Package
+Title: Solving NMF via coordinate descent
+Version: 0.1
+Date: 2012-05-24
+Author: Lanfeng Pan, Yixuan Qiu and Taiyun Wei
+Maintainer: Lanfeng Pan, Yixuan Qiu and Taiyun Wei <panlanfeng@gmail.com>
+Description: The bignmf package solving the nonnegative matrix factorization via alternating least square. It treats nonnegative constrained regression as a special L1 regression and solves it via coordinate descent method which is quite fast. The core code are implemented in C++ using RcppEigen. 
+License: GPL (>= 2)
+Depends: Rcpp(>= 0.9.10), RcppEigen(>= 0.2.0), Matrix(>= 1.0-6)
+LinkingTo: Rcpp, RcppEigen
