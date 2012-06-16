@@ -3,12 +3,12 @@
 \alias{bignmf}
 \docType{package}
 \title{
-What the package does (short line)
-~~ package title ~~
+Solving NMF via coordinate descent
 }
 \description{
-More about what it does (maybe more than one line)
-~~ A concise (1-5 lines) description of the package ~~
+The bignmf package solves the nonnegative matrix factorization via alternating least square. 
+It treats nonnegative constrained regression as a special L1 regression and solves it via 
+coordinate descent method which is quite fast. The core code is implemented in C++ using RcppEigen.
 }
 \details{
 \tabular{ll}{
@@ -16,26 +16,17 @@ Package: \tab bignmf\cr
 Type: \tab Package\cr
 Version: \tab 1.0\cr
 Date: \tab 2012-05-24\cr
-License: \tab What license is it under?\cr
+License: \tab GPL \cr
 }
-~~ An overview of how to use the package, including the most important functions ~~
 }
 \author{
-Who wrote it
-
-Maintainer: Who to complain to <yourfault@somewhere.net>
-~~ The author and/or maintainer of the package ~~
+Lanfeng Pan, Yixuan Qiu and Taiyun Wei
+Maintainer: Lanfeng Pan <panlanfeng@gmail.com>
 }
-\references{
-~~ Literature or other references for background information ~~
-}
+% \references{
+% ~~ Literature or other references for background information ~~
+% }
 
 
-\keyword{ package }
-\seealso{
-~~ Optional links to other man pages, e.g. ~~
+\keyword{optimize}
 
-}
-\examples{
-plot(1)
-}

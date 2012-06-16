@@ -1,41 +1,76 @@
-\name{bignmf-package}
-\alias{bignmf-package}
+\name{bignmf}
 \alias{bignmf}
-\docType{package}
 \title{
-What the package does (short line)
-~~ package title ~~
+Solving the nonnegative matrix factorization via alternating least square.
 }
 \description{
-More about what it does (maybe more than one line)
-~~ A concise (1-5 lines) description of the package ~~
+Solving the nonnegative matrix factorization via alternating least square.
+}
+\usage{
+bignmf(V, r, initial = "H.random", max.iteration = 200, stop.condition = 0.001)
+}
+%- maybe also 'usage' for other objects documented here.
+\arguments{
+  \item{V}{
+the matrix to be factorized. Should be a numeric matrix.
+}
+  \item{r}{
+the rank of resulting matrices.
+}
+   \item{initial}{
+can be \code{"H.kmeans"}, \code{"W.kmeans"}, \code{"H.random"}, \code{"W.random"}, or a matrix giving initial W or H. 
+\code{"H.kmeans"} means initialize H with \code{kmeans(V,r)$centers}, while 
+\code{"W.kmeans"} means 
+initialized W with kmeans centers. \code{"H.random"} means initialize H with random numbers from an exponential distribution, while 
+\code{"W.random"} means 
+initialized W randomly. The default is \code{"H.random"}.
+}
+  \item{max.iteration}{
+the number of iterations allowed.
+}
+  \item{stop.condition}{
+the function compares the norm of projected gradient matrix in the k-th iteration 
+and the norm of gradient matrix after the first iteration. If the former one is less
+than the latter multiplying stop.condition, iteration stops .
+}
+
 }
 \details{
-\tabular{ll}{
-Package: \tab bignmf\cr
-Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2012-05-24\cr
-License: \tab What license is it under?\cr
+The nonnegative matrix factorization tries to find nonnegative matrices W and H, so that 
+V \eqn{\approx} WH. Using sum of squares loss function, the problem is to solve 
+\eqn{\min_{W\ge0, H\ge0} f(V - WH)}.
+bignmf finds W minimizing f given H and then finds H give W, i.e. alternating least squares. 
+The function treats nonnegative constrained regression as a special L1 regression and solves it 
+via coordinate descent method. 
 }
-~~ An overview of how to use the package, including the most important functions ~~
+\value{
+The function returns a list of length 3.
+\item{W}{ the resulting nonnegative matrix W.}
+\item{H}{ the resulting nonnegative matrix H.}
+\item{iterations}{ number of iterations.}
+%% ...
 }
-\author{
-Who wrote it
+% \references{
+% ~put references to the literature/web site here ~
+% }
+% \author{
+%  ~~who you are~~
+% }
+% \note{
+%  ~~further notes~~
+% }
 
-Maintainer: Who to complain to <yourfault@somewhere.net>
-~~ The author and/or maintainer of the package ~~
-}
-\references{
-~~ Literature or other references for background information ~~
-}
+%% ~Make other sections like Warning with \section{Warning }{....} ~
 
-
-\keyword{ package }
-\seealso{
-~~ Optional links to other man pages, e.g. ~~
-
-}
+% \seealso{
+% ~~objects to See Also as \code{\link{help}}, ~~~
+% }
 \examples{
-plot(1)
+v_mat <- matrix(rexp(6000000,2), 2000, 3000)
+v_mat[v_mat < quantile(v_mat, .8)] <- 0
+system.time(re <- bignmfsp(Matrix(v_mat), 20))
+re$iterations
 }
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory.
+\keyword{optimize}

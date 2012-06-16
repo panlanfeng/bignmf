@@ -26,7 +26,7 @@
 bignmfsp <- function(V, r, initial="H.random", max.iteration=200, stop.condition=1e-3){
   
   if(class(V) != "dgCMatrix"){
-    class(V) <- "dgCMatrix"
+    V <- as(V, "dgCMatrix")
   }
   
   nm <- dim(V)
@@ -41,14 +41,12 @@ bignmfsp <- function(V, r, initial="H.random", max.iteration=200, stop.condition
       H <- .Call("sphupdate", V, W)
     }    else if(initial.dim[1] == r & initial.dim[2] == m){
       H <- initial
-      #W <- .Call("wupdate", V, H)
     }    else{
       stop("The initial value is of wrong dimension!")
     }
   } else if (class(initial) == "character") {
     if(initial == "H.kmeans"){
       H <- as.matrix(kmeans(V, r)$centers)
-      #        W <- matrix(0, n, r)
     } else if(initial == "W.kmeans"){
       W<- as.matrix(t(kmeans(t(V), r)$centers))
       H <- .Call("sphupdate", V, W)
@@ -84,19 +82,21 @@ bignmfsp <- function(V, r, initial="H.random", max.iteration=200, stop.condition
     #check whether the iteration  converge or not. 
     #This is the criterion is based on Projected Gradient(Lin,2007).
     if(i == 1){
-      W <- Matrix(W)
-      H <- Matrix(H)
-      res <- W %*% H - V
-      grad.w1h1 <- sum(tcrossprod(res, H) ^ 2) + sum(crossprod(W, res) ^ 2)
+      Wm <- Matrix(W)
+      Hm <- Matrix(H)
+      res <- Wm %*% Hm - V
+      grad.w1h1 <- sum(tcrossprod(res, Hm) ^ 2) + sum(crossprod(Wm, res) ^ 2)
     }else if(i %% 10 ==0) {
-      W <- Matrix(W)
-      H <- Matrix(H)
-      res <- W %*% H - V
-      grad.w <- tcrossprod(res, H)
+      Wm <- Matrix(W)
+      Hm <- Matrix(H)
+      res <- Wm %*% Hm - V
+      grad.w <- tcrossprod(res, Hm)
       # if W_ij=0, grad.w_ij=min(0, grad.w_ij)
-      grad.w[W == 0] <- grad.w[W == 0] * (grad.w[W == 0] < 0)
-      grad.h <- crossprod(W, res)
-      grad.h[H == 0] <- grad.h[H == 0] * (grad.h[H == 0] < 0)
+      grad.w <- ((grad.w <= 0) | (Wm != 0)) * grad.w
+#       grad.w[W == 0] <- grad.w[W == 0] * (grad.w[W == 0] < 0)
+      grad.h <- crossprod(Wm, res)
+      grad.h <- ((grad.h <= 0) | (Hm != 0)) * grad.h
+#       grad.h[Hm == 0] <- grad.h[Hm == 0] * (grad.h[Hm == 0] < 0)
       grad.wh <- sum(grad.w ^ 2) + sum(grad.h ^ 2)
       
       if(grad.wh < grad.w1h1 * stop.condition){
@@ -111,5 +111,4 @@ bignmfsp <- function(V, r, initial="H.random", max.iteration=200, stop.condition
   
   return(list(W=W, H=H, iterations=i))
 }
-
 

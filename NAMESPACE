@@ -1,2 +1,3 @@
 useDynLib(bignmf)
 exportPattern("^[[:alpha:]]+")
+import(Matrix) 

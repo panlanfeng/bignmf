@@ -109,4 +109,3 @@ bignmf <- function(V, r, initial="H.random", max.iteration=200, stop.condition=1
   return(list(W=W, H=H, iterations=i))
 }
 
-
