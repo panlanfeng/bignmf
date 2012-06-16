@@ -82,22 +82,17 @@ bignmfsp <- function(V, r, initial="H.random", max.iteration=200, stop.condition
     #check whether the iteration  converge or not. 
     #This is the criterion is based on Projected Gradient(Lin,2007).
     if(i == 1){
-      Wm <- Matrix(W)
-      Hm <- Matrix(H)
-      res <- Wm %*% Hm - V
-      grad.w1h1 <- sum(tcrossprod(res, Hm) ^ 2) + sum(crossprod(Wm, res) ^ 2)
+      #Wm <- Matrix(W)
+#       Hm <- Matrix(H)
+      grad.w1h1 <- sum((W %*% tcrossprod(H) - tcrossprod(V, H)) ^ 2) + sum((crossprod(W) %*% H - crossprod(W, V)) ^ 2)
     }else if(i %% 10 ==0) {
-      Wm <- Matrix(W)
-      Hm <- Matrix(H)
-      res <- Wm %*% Hm - V
-      grad.w <- tcrossprod(res, Hm)
+#       Wm <- Matrix(W)
+#       Hm <- Matrix(H)
+      grad.w <- W %*% tcrossprod(H) - tcrossprod(V, H)
+      grad.h <- crossprod(W) %*% H - crossprod(W, V)
+      
       # if W_ij=0, grad.w_ij=min(0, grad.w_ij)
-      grad.w <- ((grad.w <= 0) | (Wm != 0)) * grad.w
-#       grad.w[W == 0] <- grad.w[W == 0] * (grad.w[W == 0] < 0)
-      grad.h <- crossprod(Wm, res)
-      grad.h <- ((grad.h <= 0) | (Hm != 0)) * grad.h
-#       grad.h[Hm == 0] <- grad.h[Hm == 0] * (grad.h[Hm == 0] < 0)
-      grad.wh <- sum(grad.w ^ 2) + sum(grad.h ^ 2)
+      grad.wh <- sum(grad.w[grad.w < 0 | W >0] ^ 2) + sum(grad.h[grad.h < 0 | H >0] ^ 2)
       
       if(grad.wh < grad.w1h1 * stop.condition){
         break

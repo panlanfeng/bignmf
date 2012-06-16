@@ -85,16 +85,14 @@ bignmf <- function(V, r, initial="H.random", max.iteration=200, stop.condition=1
     #check whether the iteration  converge or not. 
     #This is the criterion is based on Projected Gradient(Lin,2007).
     if(i == 1){
-      res <- W %*% H - V
-      grad.w1h1 <- sum(tcrossprod(res, H) ^ 2) + sum(crossprod(W, res) ^ 2)
+      #res <- W %*% H - V
+      grad.w1h1 <- sum((W %*% tcrossprod(H) - tcrossprod(V, H)) ^ 2) + sum((crossprod(W) %*% H - crossprod(W, V)) ^ 2)
     }else if(i %% 5 == 0) {
-      res <- W %*% H - V
-      grad.w <- tcrossprod(res, H)
+      grad.w <- W %*% tcrossprod(H) - tcrossprod(V, H)
+      grad.h <- crossprod(W) %*% H - crossprod(W, V)
+      
       # if W_ij=0, grad.w_ij=min(0, grad.w_ij)
-      grad.w[W == 0] <- grad.w[W == 0] * (grad.w[W == 0] < 0)
-      grad.h <- crossprod(W, res)
-      grad.h[H == 0] <- grad.h[H == 0] * (grad.h[H == 0] < 0)
-      grad.wh <- sum(grad.w ^ 2) + sum(grad.h ^ 2)
+      grad.wh <- sum(grad.w[grad.w < 0 | W >0] ^ 2) + sum(grad.h[grad.h < 0 | H >0] ^ 2)
       
       if(grad.wh < grad.w1h1 * stop.condition){
         break
