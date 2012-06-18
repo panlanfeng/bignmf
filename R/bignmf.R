@@ -23,7 +23,7 @@
 # re$iterations
 
 
-bignmf <- function(V, r, initial="H.random", max.iteration=200, stop.condition=1e-3){
+bignmf <- function(V, r=5, initial="H.random", max.iteration=200, stop.condition=1e-4){
   
   V <- as.matrix(V)
   if(storage.mode(V)!="double"){
@@ -35,47 +35,16 @@ bignmf <- function(V, r, initial="H.random", max.iteration=200, stop.condition=1
   m <- nm[2]
   eps <- .Machine$double.eps
   
-  if(is.matrix(initial)){
-    initial.dim <- dim(initial)
-    if(initial.dim[1] == n & initial.dim[2] == r){
-      W <- initial
-      H <- .Call("hupdate", V, W)
-    }    else if(initial.dim[1] == r & initial.dim[2] == m){
-      H <- initial
-      #W <- .Call("wupdate", V, H)
-    }    else{
-      stop("The initial value is of wrong dimension!")
-    }
-  } else if (class(initial) == "character") {
-    if(initial == "H.kmeans"){
-      H <- as.matrix(kmeans(V, r)$centers)
-      #        W <- matrix(0, n, r)
-    } else if(initial == "W.kmeans"){
-      W<- as.matrix(t(kmeans(t(V), r)$centers))
-      H <- .Call("hupdate", V, W)
-    } else if(initial == "H.random"){
-      H <- matrix(rexp(r * m, 1), r, m)
-    }  else if(initial == "W.random"){
-      W <- matrix(rexp(r * n, 1), n, r)
-      H <- .Call("hupdate", V, W)
-    } else{
-      stop("Please give the right initial value!")
-    }
-    
-  }else{
-    stop("initial should be a matrix or a character!")
-  }
-  
-  
+  W <- abs(matrix(rnorm(r * n), n, r))
+  H <- abs(matrix(rnorm(r * m), r, m))
   
   
   for(i in 1:max.iteration){
     
     #Update W  
-    W <- .Call("wupdate",V, H)
-    # Update H
-    H <- .Call("hupdate",V, W)
-    
+    W <- .Call("wupdate",V, W, H)
+    H <- .Call("hupdate",V, W, H)
+    sqrt(sum((W %*% H - f)^2))
     #Keep W and H in a similar scale
     dk <- sqrt(sqrt(rowSums(H ^ 2)) / (sqrt(colSums(W ^ 2)) + .Machine$double.eps))
     W <- W %*% diag(dk)
@@ -85,16 +54,15 @@ bignmf <- function(V, r, initial="H.random", max.iteration=200, stop.condition=1
     #check whether the iteration  converge or not. 
     #This is the criterion is based on Projected Gradient(Lin,2007).
     if(i == 1){
-      #res <- W %*% H - V
       grad.w1h1 <- sum((W %*% tcrossprod(H) - tcrossprod(V, H)) ^ 2) + sum((crossprod(W) %*% H - crossprod(W, V)) ^ 2)
-    }else if(i %% 5 == 0) {
+    }else {
       grad.w <- W %*% tcrossprod(H) - tcrossprod(V, H)
       grad.h <- crossprod(W) %*% H - crossprod(W, V)
       
       # if W_ij=0, grad.w_ij=min(0, grad.w_ij)
       grad.wh <- sum(grad.w[grad.w < 0 | W >0] ^ 2) + sum(grad.h[grad.h < 0 | H >0] ^ 2)
-      
-      if(grad.wh < grad.w1h1 * stop.condition){
+      print(sqrt(sum((W %*% H - V)^2)))
+      if(grad.wh < grad.w1h1 * stop.condition ^ 2){
         break
       } 
     }
