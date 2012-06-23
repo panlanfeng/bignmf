@@ -23,7 +23,7 @@
 # re$iterations
 
 
-bignmf <- function(V, r=5, initial="H.random", max.iteration=200, stop.condition=1e-4){
+bignmf <- function(V, r=5, max.iteration=200, stop.condition=1e-4){
   
   V <- as.matrix(V)
   if(storage.mode(V)!="double"){
@@ -33,45 +33,15 @@ bignmf <- function(V, r=5, initial="H.random", max.iteration=200, stop.condition
   nm <- dim(V)
   n <- nm[1]
   m <- nm[2]
-  eps <- .Machine$double.eps
   
   W <- abs(matrix(rnorm(r * n), n, r))
   H <- abs(matrix(rnorm(r * m), r, m))
   
+  wh <- .Call("whupdate",V, W, H, as.integer(max.iteration), stop.condition)
   
-  for(i in 1:max.iteration){
-    
-    #Update W  
-    W <- .Call("wupdate",V, W, H)
-    H <- .Call("hupdate",V, W, H)
-    sqrt(sum((W %*% H - f)^2))
-    #Keep W and H in a similar scale
-    dk <- sqrt(sqrt(rowSums(H ^ 2)) / (sqrt(colSums(W ^ 2)) + .Machine$double.eps))
-    W <- W %*% diag(dk)
-    H <- diag(1 / (dk + .Machine$double.eps)) %*% H
-    
-    
-    #check whether the iteration  converge or not. 
-    #This is the criterion is based on Projected Gradient(Lin,2007).
-    if(i == 1){
-      grad.w1h1 <- sum((W %*% tcrossprod(H) - tcrossprod(V, H)) ^ 2) + sum((crossprod(W) %*% H - crossprod(W, V)) ^ 2)
-    }else {
-      grad.w <- W %*% tcrossprod(H) - tcrossprod(V, H)
-      grad.h <- crossprod(W) %*% H - crossprod(W, V)
-      
-      # if W_ij=0, grad.w_ij=min(0, grad.w_ij)
-      grad.wh <- sum(grad.w[grad.w < 0 | W >0] ^ 2) + sum(grad.h[grad.h < 0 | H >0] ^ 2)
-      print(sqrt(sum((W %*% H - V)^2)))
-      if(grad.wh < grad.w1h1 * stop.condition ^ 2){
-        break
-      } 
-    }
-    
-    
-    if(i == max.iteration)
-      warning("Iteration doesn't converge!")
-  }
+  if(wh$iterations == max.iteration)
+    warning("Iteration doesn't converge!")
   
-  return(list(W=W, H=H, iterations=i))
+  return(wh)
 }
 
