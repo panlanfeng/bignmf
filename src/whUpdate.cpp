@@ -6,6 +6,10 @@
   
   
 #include <RcppEigen.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+#include <time.h>
+
 using namespace Eigen;
 using namespace Rcpp;
 typedef Map<MatrixXd> MapMatd;

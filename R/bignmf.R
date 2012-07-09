@@ -23,7 +23,7 @@
 # re$iterations
 
 
-bignmf <- function(V, r=5, max.iteration=200, stop.condition=1e-4){
+bignmf <- function(V, r, max.iteration=200, stop.condition=1e-4){
   
   V <- as.matrix(V)
   if(storage.mode(V)!="double"){

@@ -1,6 +1,5 @@
 \name{bignmf-package}
 \alias{bignmf-package}
-\alias{bignmf}
 \docType{package}
 \title{
 Solving NMF via coordinate descent
