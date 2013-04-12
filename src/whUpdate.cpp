@@ -1,7 +1,16 @@
 /*
+The core update procedure for Nonnegative Matrix Factorization via coordinate descent.
+Author: Lanfeng Pan
+Date: 2012-May
+Using: RcppEigen
+
+Compile with R CMD SHLIB whUpdate.cpp, then dyn.load("whupdate.so") in R.
+or Build package with R CMD build bignmf then library(bignmf) in R
+or 
   # g++ -I/usr/share/R/include -DNDEBUG -I/home/pkg/RcppEigen/include  -I/home/pkg/Rcpp/include   -fpic  -O3 -pipe  -g  -c myfile.cpp -o myfile.o
   # g++ -shared -o myfile.so myfile.o -L/home/pkg/Rcpp/lib -lRcpp -Wl,-rpath,/home/pkg/Rcpp/lib -L/usr/lib64/R/lib -lR
-  */
+Then dyn.load in R
+*/
   
   
   
@@ -15,24 +24,28 @@ using namespace Rcpp;
 typedef Map<MatrixXd> MapMatd;
 //typedef Map<MatrixXi> MapMati;
 //typedef Map<VectorXd> MapVecd;
+/*Fast Matrix crossprod A' * A */
 inline MatrixXd AtA_map(const MapMatd& A) {
   int n(A.cols());
   return MatrixXd(n,n).setZero().selfadjointView<Lower>()
   .rankUpdate(A.adjoint());
 }
 
+/*Fast Matrix tcrossprod A* A' */
 inline MatrixXd AAt_map(const MapMatd& A) {
   int n(A.rows());
   return MatrixXd(n,n).setZero().selfadjointView<Lower>()
   .rankUpdate(A);
 }
 
+/* A'*A when A is MatrixXd type */
 inline MatrixXd AtA(const MatrixXd& A) {
   int n(A.cols());
   return MatrixXd(n,n).setZero().selfadjointView<Lower>()
   .rankUpdate(A.adjoint());
 }
 
+/*A*A' when A is MatrixXd*/
 inline MatrixXd AAt(const MatrixXd& A) {
   int n(A.rows());
   return MatrixXd(n,n).setZero().selfadjointView<Lower>()
@@ -40,17 +53,21 @@ inline MatrixXd AAt(const MatrixXd& A) {
 }
 
 
-
-
+/* When updateing W and H, there is no lambda involved as glm via coordiante descent. Because I only need the solution when lambda=0. My experiments show it's even faster if I omit the steps from seq(max.lambda, 0, length=100)*/
+/*Give H and V, update W.*/
 void forW(const Eigen::MatrixXd& gram, Eigen::MatrixXd& gradw, Eigen::MatrixXd& w)
 {
   Eigen::VectorXd delta(w.cols());
   Eigen::VectorXi sets(w.cols());
+  
+/*I jsut want sets = 1:w.cols(). Do I have to use loop in C++?*/
   for(int iset=0;iset<w.cols();iset++)
   {
     sets[iset]=iset;
   }
   int changetmp, changeidx;
+
+
   for(int irow =0; irow<w.rows(); irow++)
   {
     int iterations=0;
@@ -58,7 +75,8 @@ void forW(const Eigen::MatrixXd& gram, Eigen::MatrixXd& gradw, Eigen::MatrixXd& 
     { 
       iterations++;
       delta.setZero(w.cols());
-      srand((int)time(0));
+  /*Oops, here I just want rearange sets in random order, i.e. sets = sample.int(w.cols()). Updating in random order will speed up the convergence by several times */
+	  srand((int)time(0));
       for(int k=0;k<w.cols();k++)
       {
         changeidx=rand() % w.cols();
@@ -70,7 +88,9 @@ void forW(const Eigen::MatrixXd& gram, Eigen::MatrixXd& gradw, Eigen::MatrixXd& 
       for(int i =0;i<w.cols(); i++)
       {
         int icol=sets[i];
-        delta[icol]=std::min(w(irow, icol), gradw(irow, icol)/gram(icol, icol));
+
+		/*If w(irow, icol) = w(irow, icol) - w(irow, icol)=0   */
+		delta[icol]=std::min(w(irow, icol), gradw(irow, icol)/gram(icol, icol));
         if(std::abs(delta[icol]) > 1e-8)
         {
           gradw.row(irow) -= gram.row(icol) * delta[icol];
@@ -148,7 +168,8 @@ int wh(const MapMatd& v, Eigen::MatrixXd& w, Eigen::MatrixXd& h, int& max_iter, 
     gradh = gram * h;
     gradh.noalias() -= w.transpose() * v ;
 
-    if(iter==1)
+/*Judge if the stop condition is satisfied*/
+	if(iter==1)
     {
       initGrad= gradh.squaredNorm();
     }
@@ -171,6 +192,9 @@ int wh(const MapMatd& v, Eigen::MatrixXd& w, Eigen::MatrixXd& h, int& max_iter, 
       }
     }
 
+
+
+	
     forH(gram, gradh, h);
     
     gram=AAt(h);
@@ -182,6 +206,7 @@ int wh(const MapMatd& v, Eigen::MatrixXd& w, Eigen::MatrixXd& h, int& max_iter, 
   return iter;
 }
 
+/*This function maps data in R into Cpp*/
 RcppExport SEXP whupdate(SEXP v_mat, SEXP w_mat, SEXP h_mat, SEXP max_iter_scalar, SEXP tol_scalar)
 {
   BEGIN_RCPP
