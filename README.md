@@ -11,17 +11,22 @@ This package currently tested only on Linux.
 ##How to install
 
 In Linux teminal, go to some directory:  
+
       	  cd  ~/mypackages/ 
 
 Download it with:  
+
       	 git clone https://github.com/panlanfeng/bignmf.git
 
 Build with:  
+
     	  R CMD build bignmf
 
 Then in R:  
-    	  install.packages("~/mypackages/bignmf_0.1.tar.gz", repos = NULL, type = "source"
-)   
-	      library(bignmf)
+
+    	  install.packages("~/mypackages/bignmf_0.1.tar.gz", repos = NULL, type = "source")   
+	  library(bignmf)  
+	  
+	  
 	
 
