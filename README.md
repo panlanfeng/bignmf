@@ -1,6 +1,10 @@
 bignmf
 ======
 
+##Warning
+
+This package is deprecated and no longer maintained!
+
 This R package intends to solve Nonnegative Matrix Factorization efficiently. 
 The algorithm bases on alternating least squares while solving nonnegative constrained regression via coordinate descent. 
 The coordinate descent method is modified from glmnet (See __Regularization Paths for Generalized Linear Models via Coordinate Descent__, by J Friedman et al. 2010). 
